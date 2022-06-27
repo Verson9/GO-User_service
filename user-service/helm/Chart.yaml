@@ -1,0 +1,9 @@
+apiVersion: v1
+name: "user-service"
+description: "User service"
+version: "1.0.0-snapshot"
+keywords:
+  - user-service/commit-id :${COMMIT_ID}
+maintainers:
+  - name: Przemysław Surma
+    email: przemyslaw.surma@outlook.com

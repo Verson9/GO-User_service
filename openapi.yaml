@@ -24,6 +24,7 @@ paths:
                 items:
                   type: string
 
+  /user:
     post:
       summary: Creates a user.
       requestBody:
