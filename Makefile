@@ -22,11 +22,11 @@ vendor: ## Download Vendor packages
 
 .PHONY: lint-install
 lint-install:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+	GO111MODULE=off go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 
 .PHONY: lint
 lint: ## Run lint
-	golangci-lint run ./...
+	GO111MODULE=off golangci-lint run ./...
 
 .PHONY: unit-tests
 unit-tests: ## Run tests
