@@ -26,7 +26,7 @@ lint-install:
 
 .PHONY: lint
 lint: lint-install## Run lint
-	GO111MODULE=off golangci-lint run ./...
+	golangci-lint run ./...
 
 .PHONY: unit-tests
 unit-tests: ## Run tests
