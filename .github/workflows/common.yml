@@ -7,8 +7,8 @@ env:
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    environment: Go
     steps:
       - uses: actions/checkout@v3
 
