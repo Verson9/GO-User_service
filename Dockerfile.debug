@@ -1,0 +1,40 @@
+FROM golang:1.17.7  AS build-env
+LABEL MAINTAINER Przemysław Surma <przemyslaw.surma@outlook.com>
+RUN mkdir $GOPATH/GO-User_service
+WORKDIR $GOPATH/GO-User_service
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+COPY go.mod .
+COPY go.sum .
+COPY user-service user-service
+
+ENV MYSQL_DATABASE=db
+ENV MYSQL_HOST=localhost
+ENV MYSQL_ROOT_HOST=mysql
+ENV MYSQL_PORT=3306
+ENV MYSQL_USER=user
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_ROOT_PASSWORD=password
+ENV APP_PORT=8080
+
+RUN go mod vendor
+RUN go build -gcflags="all=-N -l" -o app ./user-service/cmd/user-service/main.go
+
+# Final stage
+FROM debian:buster
+
+EXPOSE 8080 40000
+
+ENV MYSQL_DATABASE=db
+ENV MYSQL_HOST=localhost
+ENV MYSQL_ROOT_HOST=mysql
+ENV MYSQL_PORT=3306
+ENV MYSQL_USER=user
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_ROOT_PASSWORD=password
+ENV APP_PORT=8080
+WORKDIR /
+COPY --from=build-env /go/bin/dlv /
+COPY --from=build-env /go/GO-User_service/app /
+
+ENTRYPOINT ["/dlv", "exec", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "/app"]

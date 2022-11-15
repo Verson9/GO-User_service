@@ -10,6 +10,13 @@ servers:
 
 paths:
 
+  /status:
+    get:
+      summary: Get status
+      description: Get status
+      responses:
+        200:
+          description: OK
   /users:
     get:
       summary: Returns a list of usersdb.
@@ -87,9 +94,6 @@ components:
     User:
       type: object
       properties:
-        id:
-          type: integer
-          example: 4
         username:
           type: string
           example: John Smith

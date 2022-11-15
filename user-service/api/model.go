@@ -5,14 +5,13 @@ package api
 
 // User defines model for User.
 type User struct {
-	Id         int    `json:"id"`
 	Password   string `json:"password"`
 	Privileges int    `json:"privileges"`
 	Username   string `json:"username"`
 }
 
-// PostUsersJSONBody defines parameters for PostUsers.
-type PostUsersJSONBody = User
+// PostUserJSONBody defines parameters for PostUser.
+type PostUserJSONBody = User
 
-// PostUsersJSONRequestBody defines body for PostUsers for application/json ContentType.
-type PostUsersJSONRequestBody = PostUsersJSONBody
+// PostUserJSONRequestBody defines body for PostUser for application/json ContentType.
+type PostUserJSONRequestBody = PostUserJSONBody

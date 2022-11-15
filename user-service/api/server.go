@@ -13,12 +13,15 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get status
+	// (GET /status)
+	GetStatus(w http.ResponseWriter, r *http.Request)
+	// Creates a user.
+	// (POST /user)
+	PostUser(w http.ResponseWriter, r *http.Request)
 	// Returns a list of usersdb.
 	// (GET /users)
 	GetUsers(w http.ResponseWriter, r *http.Request)
-	// Creates a user.
-	// (POST /users)
-	PostUsers(w http.ResponseWriter, r *http.Request)
 	// Returns a user by ID.
 	// (GET /users/{username})
 	GetUsersUsername(w http.ResponseWriter, r *http.Request, username string)
@@ -33,12 +36,12 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.HandlerFunc) http.HandlerFunc
 
-// GetUsers operation middleware
-func (siw *ServerInterfaceWrapper) GetUsers(w http.ResponseWriter, r *http.Request) {
+// GetStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetUsers(w, r)
+		siw.Handler.GetStatus(w, r)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -48,12 +51,27 @@ func (siw *ServerInterfaceWrapper) GetUsers(w http.ResponseWriter, r *http.Reque
 	handler(w, r.WithContext(ctx))
 }
 
-// PostUsers operation middleware
-func (siw *ServerInterfaceWrapper) PostUsers(w http.ResponseWriter, r *http.Request) {
+// PostUser operation middleware
+func (siw *ServerInterfaceWrapper) PostUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostUsers(w, r)
+		siw.Handler.PostUser(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// GetUsers operation middleware
+func (siw *ServerInterfaceWrapper) GetUsers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUsers(w, r)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -203,10 +221,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/users", wrapper.GetUsers)
+		r.Get(options.BaseURL+"/status", wrapper.GetStatus)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/users", wrapper.PostUsers)
+		r.Post(options.BaseURL+"/user", wrapper.PostUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users", wrapper.GetUsers)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/users/{username}", wrapper.GetUsersUsername)

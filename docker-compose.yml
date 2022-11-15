@@ -1,57 +1,23 @@
 version: '3.3'
 services:
-  db:
-    image: mysql:5.7
+  mysql:
+    image: mysql:latest
+    container_name: mysql
     restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: 'db'
-      # So you don't have to use root, but you can if you like
-      MYSQL_USER: 'user'
-      # You can use whatever password you like
-      MYSQL_PASSWORD: 'password'
-      # Password for root access
-      MYSQL_ROOT_PASSWORD: 'password'
-    ports:
-      # <Port exposed> : < MySQL Port running inside container>
-      - '3306:3306'
-#    expose:
-#      # Opens port 3306 on the container
-#      - '3306'
-      # Where our data will be persisted
-    networks:
-      - database-network
-    volumes:
-      - my-db:/var/lib/mysql
-# Names our volume
-  user-service:
-    depends_on:
-      - db
-    restart: unless-stopped
-    build:
-      dockerfile: user-service/Dockerfile
-    # ports from container exposed to the docker machine and the guest machine
-#    ports:
-#      # 80 on the host, 8080 on the guest. Websever listens on 8080
-#      - "80:9000" # http
-#      - "443:443" # https
-    # file with environment declarations for the container
-#
     env_file:
       - .env
-    # Link to containers in another service
-#    links:
-#      - db
-    networks:
-      - database-network
-#    entrypoint: go run user-service/cmd/user-service/main.go
-    entrypoint: ./main
-    # sync workspace folder with /go
-#    volumes:
-#      - ../../../../.:/go
-
-networks:
-  database-network:
-          driver: bridge
-
+    ports:
+      - $MYSQL_PORT:$MYSQL_PORT             # <Port exposed> : < MySQL Port running inside container>
+    volumes:
+      - my-db:/var/lib/mysql    # Where our data will be persisted
+registry:
+  restart: always
+  image: registry:2
+  ports:
+    - 5000:5000
+  volumes:
+    - /path/data:/var/lib/registry
+    - /path/certs:/certs
+    - /path/auth:/auth
 volumes:
   my-db:

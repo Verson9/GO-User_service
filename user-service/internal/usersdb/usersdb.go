@@ -5,12 +5,22 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+var (
+	dbPassword = os.Getenv("MYSQL_ROOT_PASSWORD")
+	dbDatabase = os.Getenv("MYSQL_DATABASE")
+	dbHost     = os.Getenv("MYSQL_ROOT_HOST")
+	dbPort     = os.Getenv("MYSQL_PORT")
+	dbUser     = os.Getenv("MYSQL_USER")
 )
 
 type User struct {
-	Username   string
-	Password   string
-	Privileges int
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	Privileges int    `json:"privileges"`
 }
 
 type Usersdb struct {
@@ -26,11 +36,18 @@ func Connect() Usersdb {
 }
 
 func connectToDB() *sql.DB {
-	dbPassword := os.Getenv("DBPASS")
-	db, err := sql.Open("mysql", fmt.Sprintf("root:%s@tcp(localhost:3306)/db", dbPassword))
+	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbDatabase)
+	db, err := sql.Open("mysql", dataSource)
 	if err != nil {
-		panic(err.Error())
+		log.Fatalf(err.Error())
 	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatalf(err.Error())
+		return nil
+	}
+
 	log.Println("successfully connected to database.")
 	return db
 }
@@ -52,15 +69,15 @@ func (u *Usersdb) CreateUserIfNotExists(user User) error {
 	return nil
 }
 
-func (u *Usersdb) GetUser(username string) (User, error) {
+func (u *Usersdb) GetUser(username string) (*User, error) {
 	var user User
 	data := u.db.QueryRow("SELECT username, password, privileges from users WHERE username = ?", username)
 	err := data.Scan(&user.Username, &user.Password, &user.Privileges)
 	if err != nil {
-		return User{}, fmt.Errorf("failed to fetch user \"%s\": %v ", username, err)
+		return nil, fmt.Errorf("failed to fetch user \"%s\": %v ", username, err)
 	}
 	log.Println("successfully fetched user")
-	return user, nil
+	return &user, nil
 }
 
 func (u *Usersdb) CheckUsername(username string) (bool, error) {

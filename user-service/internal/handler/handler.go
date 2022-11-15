@@ -3,29 +3,35 @@ package handler
 import (
 	"GO-User_service/user-service/api"
 	"GO-User_service/user-service/internal/usersdb"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 )
 
-var _ = api.Handler(&Handler{})
+var _ api.ServerInterface = (*Handler)(nil)
 
-type database interface {
+type Database interface {
 	CreateUserIfNotExists(user usersdb.User) error
-	GetUser(username string) (usersdb.User, error)
+	GetUser(username string) (*usersdb.User, error)
 	CheckUsername(username string) (bool, error)
 	GetAllUsers() ([]usersdb.User, error)
 	Close() error
 }
 
 type Handler struct {
-	usersdb database
+	usersdb Database
 	logger  *log.Logger
 }
 
-func NewHandler(database database, logger *log.Logger) api.ServerInterface {
+func (h *Handler) GetStatus(w http.ResponseWriter, r *http.Request) {
+	_, err := w.Write([]byte("OK"))
+	if err != nil {
+		h.logger.Printf("failed to send response: %v", err)
+	}
+}
+
+func NewHandler(database Database, logger *log.Logger) api.ServerInterface {
 	return &Handler{
 		usersdb: database,
 		logger:  logger,
@@ -38,15 +44,17 @@ func (h *Handler) GetUsers(w http.ResponseWriter, _ *http.Request) {
 		h.handleErrorResponse(w, fmt.Sprintf("failed to fetch users from database: %v", err), http.StatusInternalServerError)
 		return
 	}
-	respBody := new(bytes.Buffer)
-	json.NewEncoder(respBody).Encode(users)
-	_, err = w.Write(respBody.Bytes())
+
+	resp, err := json.Marshal(users)
 	if err != nil {
-		h.logger.Println("failed to send response: %v", err)
+		h.handleErrorResponse(w, fmt.Sprintf("failed to encode users: %v", err), http.StatusInternalServerError)
+		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	writeResponse(w, resp)
 }
 
-func (h *Handler) PostUsers(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostUser(w http.ResponseWriter, r *http.Request) {
 	var u usersdb.User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
@@ -61,8 +69,8 @@ func (h *Handler) PostUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetUsersUsername(w http.ResponseWriter, r *http.Request, username string) {
-	checkUsername, err := h.usersdb.CheckUsername(username)
-	if !checkUsername || err != nil {
+	userExist, err := h.usersdb.CheckUsername(username)
+	if !userExist || err != nil {
 		h.handleErrorResponse(w, fmt.Sprintf("failed to get user with username [%s]: %v", username, err), http.StatusInternalServerError)
 		return
 	}
@@ -74,17 +82,21 @@ func (h *Handler) GetUsersUsername(w http.ResponseWriter, r *http.Request, usern
 	marshal, err := json.Marshal(user)
 	if err != nil {
 		h.handleErrorResponse(w, fmt.Sprintf("failed to create json from user struct: %v", err), http.StatusInternalServerError)
-
 		return
 	}
-	_, err = w.Write(marshal)
-	if err != nil {
-		h.handleErrorResponse(w, fmt.Sprintf("failed to send response: %v", err), http.StatusInternalServerError)
-		return
-	}
+	w.Header().Set("Content-Type", "application/json")
+	writeResponse(w, marshal)
 }
 
 func (h *Handler) handleErrorResponse(w http.ResponseWriter, msg string, errorCode int) {
 	fmt.Println(msg)
 	http.Error(w, msg, errorCode)
+}
+
+func writeResponse(w http.ResponseWriter, msg []byte) {
+	_, err := w.Write(msg)
+	if err != nil {
+		fmt.Printf("failed to send response: %v", err)
+		return
+	}
 }

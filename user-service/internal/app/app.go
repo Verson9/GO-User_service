@@ -7,19 +7,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
-const Port = "8080"
-
 func Run() {
+	port := os.Getenv("APP_PORT")
 	u := usersdb.Connect()
 	l := log.Logger{}
 
 	s := handler.NewHandler(&u, &l)
 	h := api.Handler(s)
 
-	err := http.ListenAndServe(Port, h)
+	err := http.ListenAndServe(":"+port, h)
 	if err != nil {
-		l.Fatalln(fmt.Sprintf("failed to serve connection on port \"%s\"", Port))
+		l.Fatalf(fmt.Sprintf("failed to serve connection on port \"%s\": %v", port, err))
 	}
 }
