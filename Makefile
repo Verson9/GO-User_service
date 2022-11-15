@@ -1,3 +1,5 @@
+GOLANGCI_LINT=.tools/golangci-lint
+
 .PHONY: help
 help: ## Show this help.
 	@echo ''
@@ -22,11 +24,14 @@ vendor: ## Download Vendor packages
 
 .PHONY: lint-install
 lint-install:
-	GO111MODULE=off go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+	if [ ! -f $(GOLANGCI_LINT) ]; then \
+  		echo "Installing golangci-lint"; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b .tools; \
+	fi
 
 .PHONY: lint
-lint: lint-install## Run lint
-	golangci-lint run ./...
+lint: lint-install ## Run lint
+	${GOLANGCI_LINT} run ./...
 
 .PHONY: unit-tests
 unit-tests: ## Run tests

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"GO-User_service/user-service/internal/handler"
@@ -122,33 +123,44 @@ func TestHandler_GetUsersUsername(t *testing.T) {
 	}
 }
 
-//
-//func TestHandler_PostUser(t *testing.T) {
-//	type fields struct {
-//		usersdb database
-//		logger  *log.Logger
-//	}
-//	type args struct {
-//		w http.ResponseWriter
-//		r *http.Request
-//	}
-//	tests := []struct {
-//		name   string
-//		fields fields
-//		args   args
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			h := &Handler{
-//				usersdb: tt.fields.usersdb,
-//				logger:  tt.fields.logger,
-//			}
-//			h.PostUser(tt.args.w, tt.args.r)
-//		})
-//	}
-//}
+func TestHandler_PostUser(t *testing.T) {
+	logger := &log.Logger{}
+	tests := []struct {
+		name               string
+		db                 handler.Database
+		body               string
+		expectedStatusCode int
+	}{
+		{
+			name:               "successful_test",
+			db:                 &mockDatabase{},
+			expectedStatusCode: http.StatusOK,
+			body:               `{"username":"username","password":"password","privileges":0}`,
+		},
+		{
+			name: "unsuccessful_test",
+			db: &mockDatabase{
+				expectFail: true,
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			body:               `failed to fetch user:`,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/users", strings.NewReader(tc.body))
+			w := httptest.NewRecorder()
+			h := handler.NewHandler(tc.db, logger)
+
+			h.PostUser(w, req)
+
+			res := w.Result()
+			defer res.Body.Close()
+
+			assert.Equal(t, res.StatusCode, tc.expectedStatusCode)
+		})
+	}
+}
 
 type mockDatabase struct {
 	expectFail                bool
