@@ -4,7 +4,7 @@ on: [push]
 
 env:
   DOCKER_USER: ${{secrets.DOCKER_USER}}
-  DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+  DOCKER_PASS: ${{secrets.DOCKER_PASS}}
 jobs:
   build:
     runs-on: ubuntu-latest
