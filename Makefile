@@ -25,7 +25,7 @@ lint-install:
 	GO111MODULE=off go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 
 .PHONY: lint
-lint: ## Run lint
+lint: lint-install## Run lint
 	GO111MODULE=off golangci-lint run ./...
 
 .PHONY: unit-tests
