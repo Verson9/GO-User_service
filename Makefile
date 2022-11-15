@@ -45,6 +45,11 @@ docker-build: ## Build Docker image
 docker-run: docker-build ## Run containerized application
 	docker run -p 8080:8080 user-service
 
+.PHONY: docker-push
+docker-push: docker-build ## Push Docker image
+	docker login -u $DOCKER_USER -p $DOCKER_PASS
+	docker push user-service:latest
+
 .PHONY: docker-build-debug
 docker-build-debug: ## Build Docker image with debugging port
 	docker build -t user-service-debug -f ./Dockerfile.debug .
@@ -53,7 +58,7 @@ docker-build-debug: ## Build Docker image with debugging port
 docker-run-debug: docker-build-debug ## Run containerized application with debugging port
 	docker run -p 40000:40000 --name user-service-debug --cap-add SYS_PTRACE --network database-network --security-opt apparmor=unconfined user-service-debug:latest
 
-.PHONY: docker-push
-docker-push: docker-build ## Push Docker image
+.PHONY: docker-push-debug
+docker-push-debug: docker-build-debug ## Push Docker image with debugging port
 	docker login -u $DOCKER_USER -p $DOCKER_PASS
-	docker push user-service:latest
+	docker push user-service-debug:latest

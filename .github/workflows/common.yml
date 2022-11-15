@@ -19,3 +19,9 @@ jobs:
 
       - name: Test
         run: make unit-tests
+
+      - name: Build
+        run: make docker-build-debug
+
+      - name: Publish
+        run: make docker-push-debug
