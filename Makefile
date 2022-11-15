@@ -47,7 +47,7 @@ docker-run: docker-build ## Run containerized application
 
 .PHONY: docker-push
 docker-push: docker-build ## Push Docker image
-	docker login -u $DOCKER_USER -p $DOCKER_PASS
+	docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
 	docker push user-service:latest
 
 .PHONY: docker-build-debug
@@ -60,5 +60,5 @@ docker-run-debug: docker-build-debug ## Run containerized application with debug
 
 .PHONY: docker-push-debug
 docker-push-debug: docker-build-debug ## Push Docker image with debugging port
-	docker login -u $DOCKER_USER -p $DOCKER_PASS
+	docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
 	docker push user-service-debug:latest
