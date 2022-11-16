@@ -51,7 +51,7 @@ docker-push:  ## Push Docker image
 
 .PHONY: docker-build-debug
 docker-build-debug: ## Build Docker image with debugging port
-	docker build -t verson9/user-service-debug -f ./Dockerfile.debug .
+	docker build -t verson9/user-service-debug:${GITHUB_RUN_ID} -f ./Dockerfile.debug .
 
 .PHONY: docker-run-debug
 docker-run-debug: docker-build-debug ## Run containerized application with debugging port
